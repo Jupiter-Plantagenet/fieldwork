@@ -1,0 +1,30 @@
+{
+  "base_image": "python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7",
+  "context_builder_sha256": "4cd4fb79f4c3da5e8d1c4a8e00ebf07ef746e5bf91c4bd7fc5e710fb8e83b59a",
+  "files": {
+    "fieldwork/container_real_pixels.py": "3343066eb6f634f711d729a027e5a4c744a83882016804f3b43f1e4947dd99f8",
+    "fieldwork/data.py": "7260d2d7d78e15b8cf2936d8c69578a18fe0d45a535bcbe85a9b63362f5dfb7d",
+    "fieldwork/fsops.py": "2380cc6ec3720e58c3f66b1cf45fd993c351b7219ab5f8cf0c4e0ba447a069e6",
+    "fieldwork/metrics.py": "71e5742c5f48e3f1da0ff9b28cf7d8bf3cff1ee0236251426c778cab95d36ace",
+    "fieldwork/ml.py": "e19148d1ef52a459f04c1be48106fab2c78aef4b9552b61694054e63beea5047",
+    "fieldwork/model_child_entry.py": "b67be6f4709cfaa5616d7de913221eb6239b072fc2dd5b442d36516112b40eb2",
+    "fieldwork/qualified_infer_child.py": "0d18d9b329c003029107f38372116646bd664224cab255890e65cd122839f6d9",
+    "fieldwork/real_bundle.py": "2005871dc2ab8d3d127f6910030fef67f5de4b921e9144e417956164206486d4",
+    "fieldwork/real_bundle_child.py": "89b3149cea33f31a5599f3de9698d6e7aba079b335a415f3310b9573b4d03f6f",
+    "fieldwork/real_infer_child.py": "51b27aa4d1b037ff56cbb8fb139850b44c1b89b29272d344d3fe0ba4968da75c",
+    "fieldwork/real_pixel_decoder.py": "a117db980884f3dfbb3c9af000f11f718ae2d67f384177c8d4d37e4181feda17",
+    "fieldwork/real_pixels.py": "7e7c65884efffa3b2d740661fc169fee0a0b705cc5d31e421862b337bfc66caa",
+    "fieldwork/real_run_profile.py": "51f11f55a8d222ff4a2bee0489fda3886c353af8c73937710e6c11cffb61137d",
+    "fieldwork/real_train_child.py": "9bb4a7159061655a526eed750c5d162aa12bbd0c6528245a180800b32a832cb1",
+    "fieldwork/real_training.py": "b5284bc3624c000a1587611f85f6eda9725a63e15be29a3339f5a746a2dd59a0",
+    "fieldwork/residual_recipe.py": "814f45e309f1987a3e3ab0b3b8896d8d99be20aa9cdd527312ddd91bc713f2a1",
+    "fieldwork/safe_codec.py": "82a67009a721d539b5562d71abe637d265c4ae622e2717ec3949ad4832f30a8d",
+    "ops/Dockerfile.real-model": "0b2d36388c815146561d4343617e175688aed9a62db6a1bcbc0d83a1ef29271c",
+    "ops/requirements-real-model.lock": "df1b25b5d9f739fc439f39497c627b824373a7f65c7dc6dcc707c0099b519e25",
+    "tools/verify_metrics.py": "710c29c253cfba1a08f1708318e2e237535cade35578bca3e4a828b134282069",
+    "tools/verify_population_metrics.py": "39ab383146e77470c27568226ac4cb62aae1c13db19be3da740a389f71419abe",
+    "tools/verify_release_bundle.py": "97772d24a1e5137c5cdddc3aea906abc13d3ea458ff6bec7b0f63268db351a4b"
+  },
+  "platform": "linux/amd64",
+  "schema": "fieldwork.real-model-source-lock/v1"
+}

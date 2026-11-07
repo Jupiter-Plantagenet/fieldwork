@@ -1,0 +1,26 @@
+name: Repository verification
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '26.7.0'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Python dependencies
+        run: |
+          python -m venv .venv
+          .venv/Scripts/python -m pip install -r requirements-api.lock
+      - name: Install web dependencies
+        run: npm --prefix apps/web ci --ignore-scripts --no-audit --no-fund
+      - name: Run focused checks
+        run: python verify.py

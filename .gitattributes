@@ -1,0 +1,4 @@
+# Preserve source, fixture and vendor bytes used by provenance checks.
+* -text
+# Shell entry points need LF when checked out on Windows.
+*.sh text eol=lf

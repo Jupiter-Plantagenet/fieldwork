@@ -1,0 +1,55 @@
+{
+  "schema": "fieldwork.decoder-dependency-evidence/v1",
+  "observed_utc_date": "2026-11-02",
+  "container_base": {
+    "reference": "docker.io/library/python:3.12.11-slim-bookworm",
+    "manifest_media_type": "application/vnd.oci.image.index.v1+json",
+    "oci_index_sha256": "519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7",
+    "platform": "linux/amd64",
+    "registry_manifest_endpoint": "https://registry-1.docker.io/v2/library/python/manifests/3.12.11-slim-bookworm"
+  },
+  "package": "Pillow",
+  "version": "13.0.0",
+  "pypi_project": "https://pypi.org/project/pillow/",
+  "license_expression": "MIT-CMU",
+  "python_requirement": ">=3.11",
+  "wheel": {
+    "filename": "pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+    "url": "https://files.pythonhosted.org/packages/e6/99/fdf65cc539e266ab93546c261bdf98411fe165c6e4e13f9dbf597097192b/pillow-13.0.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl",
+    "sha256": "42d63be3af4f9b951b199b0a9d23365d37ab14687e6d77b74940432c8515c4ca"
+  },
+  "osv_query": {
+    "endpoint": "https://api.osv.dev/v1/query",
+    "ecosystem": "PyPI",
+    "queried_version": "13.0.0",
+    "reported_advisories": []
+  },
+  "built_image": {
+    "tag": "fieldwork-decoder:r5-20261102-03",
+    "config_id": "sha256:8155ab9774815bf6b92e8a892c018b683aa4418385154cb342cc9b22fa92e77d",
+    "platform": "linux/amd64",
+    "configured_user": "65532:65532",
+    "docker_client_version": "29.6.1",
+    "docker_server_version": "29.6.1",
+    "buildx_version": "v0.35.0-desktop.2",
+    "ustar_context": {
+      "path": ".local/w3-decoder-final-build-context-20261102.tar",
+      "sha256": "aacdd356579d07ee53702475956f7995db62341bb171c632086b02d06c0b18ae",
+      "bytes": 40960,
+      "entries": [
+        "ops/Dockerfile.decoder",
+        "fieldwork/container_decoder.py",
+        "ops/decoder-pillow-requirements.lock"
+      ]
+    },
+    "copied_source_sha256": {
+      "ops/Dockerfile.decoder": "f96a91d616aa9f4a2d40b4bce1df6bab51e650a001e75a371d10f469240c0f53",
+      "fieldwork/container_decoder.py": "ffe04414ec26a1eb4e5c443d124c1f1d15bf1e26238229966505a831c407eaee",
+      "ops/decoder-pillow-requirements.lock": "1cf186604bfd8a01fa506cd9aed70c664e4ff41d4ee01cc9a8d3c0ea693397d9"
+    },
+    "build_record": ".local/w3-decoder-final-build-record.json",
+    "build_log": ".local/w3-decoder-final-build.log",
+    "runtime_proof": ".local/w3-decoder-final-runtime-combined-proof.json"
+  },
+  "limits": "Release metadata and a point-in-time OSV query only; not a full license, SBOM, provenance, malware, or vulnerability review. The authored fixture/runtime proof validates this isolated intake decoder only, not the separate real training/inference boundary or Docker daemon/kernel escape resistance."
+}

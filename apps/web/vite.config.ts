@@ -1,0 +1,2 @@
+import { defineConfig } from 'vite';
+export default defineConfig({plugins:[{name:'canonical-loopback-navigation',configureServer(server){server.middlewares.use((req,res,next)=>{if(req.method==='GET'&&req.headers.host==='localhost:5102'){res.writeHead(307,{Location:`http://127.0.0.1:5102${req.url||'/'}`,'Cache-Control':'no-store'});res.end();return;}next();});}}],server:{host:'127.0.0.1',port:5102,strictPort:true,proxy:{'/api':'http://127.0.0.1:8102','/auth':'http://127.0.0.1:8102','/health':'http://127.0.0.1:8102'}}});

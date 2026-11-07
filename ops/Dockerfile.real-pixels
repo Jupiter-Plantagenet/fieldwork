@@ -1,0 +1,11 @@
+# The runtime build must pin this base by digest and record the resulting image config ID.
+FROM python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_DISABLE_PIP_VERSION_CHECK=1
+WORKDIR /app
+COPY ops/decoder-pillow-requirements.lock /tmp/requirements.lock
+RUN python -m pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock \
+    && python -c "import PIL; assert PIL.__version__ == '13.0.0'"
+COPY fieldwork/container_real_pixels.py /app/container_real_pixels.py
+USER 65532:65532
+ENTRYPOINT ["/usr/local/bin/python", "-I", "-B", "/app/container_real_pixels.py", "--container"]
+

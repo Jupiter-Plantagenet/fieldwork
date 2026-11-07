@@ -1,0 +1,83 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createRoot } from 'react-dom/client';
+import './style.css';
+import { ErrorInvestigation, type FlagSession } from './ErrorInvestigation';
+import { AnnotationPanel } from './AnnotationPanel';
+import { RunCancellation } from './RunCancellation';
+import { createCancellationSession } from './run-cancellation';
+import { RealDataPanel } from './RealDataPanel';
+import { refreshWorkspace } from './workspace-refresh';
+import { ApiError, ErrorState, Loading, MediaImg, getJson, short } from './resource';
+import { ArtifactsScreen, Configure, Dataset, EvaluationScreen, Inference, Overview, Recovery, Runs, Settings, Splits, Training, Versions, type Ctx } from './screens';
+import { isRealRun, type Run, type Sample, type Snapshot, type User } from './types';
+
+const screens=[['overview','Research workspace'],['dataset','Dataset explorer'],['sample','Sample inspector'],['annotations','Annotation review'],['versions','Dataset versions'],['splits','Split integrity'],['configure','Configure training'],['runs','Runs & workers'],['training','Training run'],['evaluation','Evaluation results'],['errors','Error investigation'],['recovery','Recover training'],['artifacts','Model artifacts'],['inference','Inference playground'],['settings','Workspace & access settings']];
+const descriptions:Record<string,string>={overview:'A project desk with an inspectable, reproducible research trail.',dataset:'Inspect the exact pinned image population.',sample:'Content identity, frozen labels and provenance.',annotations:'Review decisions without rewriting frozen inputs.',versions:'Immutable manifests pin the inputs of each experiment.',splits:'Exact membership. Validation is exploratory; holdout remains sealed.',configure:'Resolve inputs and parameters before local CPU queue submission.',runs:'Durable real jobs and a separately labeled fixture queue.',training:'Real committed checkpoints and attempt lineage; fixture lab is separate.',evaluation:'Verified real validation metrics and a separately labeled fixture lab.',errors:'Rights-gated real validation slices and a separately labeled fixture lab.',recovery:'Real committed checkpoint recovery and a separately labeled fixture lab.',artifacts:'Data-only candidates and their release boundaries.',inference:'A qualified release is required for ordinary image inference.',settings:'Server-derived identity, access policy and operating boundaries.'};
+function App(){
+ const [user,setUser]=useState<User|null>(null),[snap,setSnap]=useState<Snapshot|null>(null),[route,setRoute]=useState(location.hash.slice(1)||'overview'),[status,setStatus]=useState(''),[error,setError]=useState(''),[snapError,setSnapError]=useState<ApiError|null>(null),[search,setSearch]=useState(''),[label,setLabel]=useState('all'),[split,setSplit]=useState('all'),[selected,setSelected]=useState(''),[runId,setRunId]=useState(''),[cell,setCell]=useState([0,0]),[realRunId,setRealRunId]=useState(''),[realCell,setRealCell]=useState<{runId:string;cell:number[]}>({runId:'',cell:[0,0]}),[loading,setLoading]=useState(true),[name,setName]=useState(''),[password,setPassword]=useState('');
+ const sessionGeneration=useRef(0),sessionKey=useRef<string|null>(null);
+ function installSession(next:User|null){
+  const incoming=next?`${next.workspace}\u0000${next.name}\u0000${next.csrf}`:null;
+  if(sessionKey.current!==incoming){sessionGeneration.current+=1;sessionKey.current=incoming;setRealRunId('');setRealCell({runId:'',cell:[0,0]});setSnap(null);setError('');setSnapError(null);setLoading(!!next)}
+  setUser(next);
+ }
+ const base=user?`/api/v1/workspaces/${user.workspace}`:'';
+ const [selectedRecord,setSelectedRecord]=useState<Sample|null>(null);
+ const mediaUrl=(s:Sample)=>`${base}/${s.media_scope==='real'?'real/':''}samples/${encodeURIComponent(s.id)}/media`;
+ const sampleClasses=(s:Sample)=>s.classes||snap?.classes||[];
+ const cancellationSession=useMemo(()=>createCancellationSession(),[user?.name,user?.workspace]);
+ const flagSession=useMemo<FlagSession>(()=>new Map(),[user?.name,user?.workspace]);
+ async function refresh(u=user,required=false){
+  if(!u){if(required)throw new Error('WORKSPACE_UNAVAILABLE');return}
+  const requestedGeneration=sessionGeneration.current,requestedSession=`${u.workspace}\u0000${u.name}\u0000${u.csrf}`;
+  const currentRequest=()=>requestedGeneration===sessionGeneration.current&&requestedSession===sessionKey.current;
+  const operation=refreshWorkspace(()=>getJson<Snapshot>(`/api/v1/workspaces/${u.workspace}/snapshot`),s=>{if(!currentRequest())return;setSnap(s);const legacy=s.runs.filter(r=>!isRealRun(r));setRunId(old=>old&&legacy.some(r=>r.id===old)?old:legacy.find(r=>r.state==='succeeded')?.id||legacy[0]?.id||'');setError('');setSnapError(null)},
+   e=>{if(!currentRequest())return;const err=e instanceof ApiError?e:new ApiError(0,String(e),'offline');setError(err.message);setSnapError(err);if(err.kind==='session'){installSession(null);setStatus('Session expired. Sign in again.')}},()=>{if(currentRequest())setLoading(false)});
+  if(required)return operation;
+  await operation.catch(()=>{});
+ }
+ useEffect(()=>{const generation=sessionGeneration.current;getJson<User>('/auth/session').then(u=>{if(generation!==sessionGeneration.current)return;installSession(u);refresh(u)}).catch(()=>{if(generation===sessionGeneration.current)setLoading(false)})},[]);
+ useEffect(()=>{const fn=()=>setRoute(location.hash.slice(1)||'overview');window.addEventListener('hashchange',fn);return()=>window.removeEventListener('hashchange',fn)},[]);
+ useEffect(()=>{if(!user)return;const id=setInterval(()=>refresh(),2500);return()=>clearInterval(id)},[user]);
+
+ function go(id:string){location.hash=id;setRoute(id);setStatus('');setTimeout(()=>document.querySelector<HTMLElement>('h1')?.focus(),0)}
+ async function signOut(){try{await getJson('/auth/logout',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-Token':user?.csrf||''}})}catch(e){setStatus(`Sign-out not confirmed · ${String(e instanceof Error?e.message:e)}`);return}installSession(null)}
+ const run=snap?.runs.find(r=>r.id===runId&&!isRealRun(r)) as Run|undefined;const sample=(selectedRecord?.id===selected&&selectedRecord.workspace_id===user?.workspace?selectedRecord:undefined)||snap?.samples.find(s=>s.id===selected)||(selected?undefined:snap?.samples[0]);const title=screens.find(s=>s[0]===route)?.[1]||'Research workspace';
+ const Detail=({rows}:{rows:[string,React.ReactNode][]})=><dl className="detail">{rows.map(([a,b])=><React.Fragment key={a}><dt>{a}</dt><dd>{b}</dd></React.Fragment>)}</dl>;
+ const Card=({s}:{s:Sample})=><button className="samplecard" aria-label={`Inspect ${s.id}`} onClick={()=>{setSelected(s.id);setSelectedRecord({...s,workspace_id:user?.workspace});go('sample')}}><MediaImg className="art" src={mediaUrl(s)} alt={`${(sampleClasses(s)[s.label??-1]||'Unlabelled')} sample ${s.id}`}/><div className="meta"><b>{s.id}</b><span>{(sampleClasses(s)[s.label??-1]||'Unlabelled')} · {s.split}</span></div></button>;
+ function runPicker(){return <label>Fixture lab run · synthetic only<select aria-label="Fixture lab run · synthetic only" value={runId} onChange={e=>setRunId(e.target.value)}><option value="">Choose a fixture run</option>{snap?.runs.filter(r=>!isRealRun(r)).map(r=><option key={r.id} value={r.id}>{short(r.id)} · {r.state} · {r.epoch}/{r.config.epochs}</option>)}</select></label>}
+ const cancelEnabled=!error&&snap?.workspace===user?.workspace&&snap?.capabilities?.revisioned_cancel===true;
+ const cancel=(r:Run)=><RunCancellation key={r.id} session={cancellationSession} base={base} run={r} role={user!.role} csrf={user!.csrf} enabled={cancelEnabled} refresh={()=>refresh(user,true)}/>;
+ function render(){
+  if(!snap){
+   if(loading)return <section className="panel empty"><Loading label="workspace"/></section>;
+   if(snapError)return <section className="panel"><ErrorState label="workspace" error={snapError} retry={()=>{setLoading(true);refresh()}}/></section>;
+   return <section className="panel empty" data-state="error">Workspace unavailable. <button onClick={()=>{setLoading(true);refresh()}}>Retry</button></section>;
+  }
+  const ctx:Ctx={base,user:user!,snap,run,runId,setRunId,go,runPicker,renderCard:s=><Card s={s}/>,setStatus,refresh:()=>refresh(user,true),setCell};
+  switch(route){
+  case 'overview':return <Overview ctx={ctx}/>;
+  case 'dataset':return <Dataset ctx={ctx} search={search} setSearch={setSearch} label={label} setLabel={setLabel} split={split} setSplit={setSplit}/>;
+  case 'sample':return sample?<div className="cols"><section className="panel" data-resource="sample" data-state="ready"><MediaImg className="art large" src={mediaUrl(sample)} alt={`Sample ${sample.id}`}/><h2>{sample.id}</h2><p>Current label · {(sampleClasses(sample)[sample.label??-1]||'Unlabelled')}</p><Detail rows={[["Group",sample.group],["Split",sample.split],["Scope",sample.media_scope==='real'?'real-rights-cleared':snap.scope],["Raw SHA256",<span className="hash">{sample.sha256}</span>],["Pixels SHA256",<span className="hash">{sample.pixel_sha256}</span>]]}/></section><div className="stack"><section className="panel"><h2>Label & taxonomy</h2><AnnotationPanel base={base} user={user!} mode="sample" classes={sampleClasses(sample)} sample={sample}/></section><section className="panel"><h2>Pinned manifest</h2><p>Sample belongs to the selected version or pinned fixture manifest. Label changes create proposals on a child version; this manifest never changes.</p><p className="hash">{sample.version_id||snap.dataset_digest}</p></section></div></div>
+   :<section className="panel empty" data-state={selected?'holdout_sealed':'empty'}><h2>{selected?`Sample ${selected} is not available`:'No samples'}</h2><p>{selected?'It is sealed (holdout) or not in this workspace. No media or label is shown.':'The pinned manifest has no permitted samples.'}</p><button onClick={()=>go('dataset')}>Back to dataset</button></section>;
+  case 'annotations':return <AnnotationPanel base={base} user={user!} mode="annotations" classes={snap.classes}/>;
+  case 'versions':return <Versions ctx={ctx} panel={<AnnotationPanel base={base} user={user!} mode="versions" classes={snap.classes}/>}/>;
+  case 'splits':return <Splits ctx={ctx} browseValidation={()=>{setSplit('validation');go('dataset')}}/>;
+  case 'configure':return <section className="stack" data-fixture-lab="synthetic-only"><div className="callout"><b>Fixture lab · synthetic execution only.</b> The form below submits to the fixture endpoint; the separate real-data queue is shown below.</div><Configure ctx={ctx}/></section>;
+  case 'runs':return <section className="stack" data-fixture-lab="synthetic-only"><div className="callout"><b>Fixture lab · synthetic execution only.</b> The queue below contains only fixture runs; real runs are selected in the real-run panel.</div><Runs ctx={ctx} cancel={cancel}/></section>;
+  case 'training':return <section className="stack" data-fixture-lab="synthetic-only"><div className="callout"><b>Fixture lab · synthetic execution only.</b> These sample runs are a separate UI exercise; real training data and metrics are shown in the real-run panel above.</div><Training ctx={ctx} cancel={cancel}/></section>;
+  case 'evaluation':return <section className="stack" data-fixture-lab="synthetic-only"><div className="callout"><b>Fixture lab · synthetic execution only.</b> The matrix below is fixture evidence only. Use the verified real validation matrix above for real runs.</div><EvaluationScreen ctx={ctx}/></section>;
+  case 'errors':return <section className="stack" data-fixture-lab="synthetic-only"><div className="callout"><b>Fixture lab · synthetic execution only.</b> This drilldown uses fixture run records. Real validation members appear above and use rights-gated media.</div><ErrorInvestigation key={base+user!.name+runId} base={base} run={run} user={user!} classes={snap.classes} cell={cell} setCell={setCell} enabled={!error&&snap.workspace===user!.workspace&&snap.capabilities?.evaluation_flags===true} session={flagSession} refresh={()=>refresh(user,true)} renderSample={id=>{const s=snap.samples.find(s=>s.id===id);return s?<Card s={s}/>:<button onClick={()=>{setSelected(id);go('sample')}}>{id} · sample metadata unavailable</button>}}/></section>;
+  case 'recovery':return <section className="stack" data-fixture-lab="synthetic-only"><div className="callout"><b>Fixture lab · synthetic execution only.</b> The recovery state below belongs only to a fixture run. Real checkpoint lineage and recovery controls appear above.</div><Recovery ctx={ctx}/></section>;
+  case 'artifacts':return <ArtifactsScreen ctx={ctx}/>;
+  case 'inference':return <Inference ctx={ctx}/>;
+  case 'settings':return <Settings ctx={ctx} signOut={signOut}/>;
+  default:return <section className="panel"><h2>Unknown route</h2><button onClick={()=>go('overview')}>Return to workspace</button></section>
+  }
+ }
+ if(!user)return <main className="login panel"><div className="brand"><span className="mark"/>fieldwork</div><h1>Research, with a trail.</h1><p>Sign in to the local CPU research workspace.</p><form onSubmit={async e=>{e.preventDefault();try{const u=await getJson<User>('/auth/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,password})});installSession(u);setPassword('');setStatus('');refresh(u)}catch(e){setStatus(String(e instanceof Error?e.message:e))}}}><label>Account<input autoComplete="username" value={name} onChange={e=>setName(e.target.value)} required/></label><label>Password<input autoComplete="current-password" type="password" value={password} onChange={e=>setPassword(e.target.value)} required/></label><button className="primary">Sign in</button></form><p role="status">{loading?'Checking session…':status}</p><p className="inline-note">Loopback development only.</p></main>;
+ const scopeName=snap?.scope==='synthetic-execution-only'?'Synthetic execution workspace':snap?.scope||'Research workspace';
+ const realPanel=<RealDataPanel key={`${base}:${user.name}:${sessionGeneration.current}`} screen={route} base={base} user={user} capabilities={snap?.capabilities} selectedRealRunId={realRunId} setSelectedRealRunId={setRealRunId} realCell={realCell} setRealCell={setRealCell} go={go}/>;
+ return <><a className="sr-only" href="#main" onClick={e=>{e.preventDefault();document.getElementById('main')?.focus()}}>Skip to research content</a><div className="banner"><b>Fieldwork / local research</b> · {snap?`Scope ${snap.scope} · Release ${snap.release.split(':')[0]}`:'Workspace not loaded'}</div><div className="shell"><aside><div className="brand"><span className="mark"/>fieldwork</div><div className="workspace"><small>RESEARCH WORKSPACE</small><b>{scopeName}</b><small>{short(user.workspace)} · {snap?`${snap.classes.length}-class classification`:'loading'}</small></div><nav aria-label="Workspace navigation">{screens.map(([id,t],i)=><React.Fragment key={id}>{[0,1,6,9,12,14].includes(i)&&<span className="navgroup">{({0:'Workspace',1:'Data',6:'Experiments',9:'Evaluation',12:'Delivery',14:'Administration'} as Record<number,string>)[i]}</span>}<button aria-current={route===id?'page':undefined} className={route===id?'active':''} onClick={()=>go(id)}>{t}</button></React.Fragment>)}</nav><footer><b>Research, with a trail.</b><br/>Data → experiment → artifact</footer></aside><div className="right"><header className="top"><span>{scopeName}</span><span>/</span><span>{title}</span><span className="spacer"/><span className="muted">{user.role}</span><span className="avatar">{user.name.slice(0,2).toUpperCase()}</span></header><main id="main" tabIndex={-1} data-current-screen={route}><label className="nav-mobile">Workspace screen<select aria-label="Workspace screen" value={route} onChange={e=>go(e.target.value)}>{screens.map(([id,t])=><option key={id} value={id}>{t}</option>)}</select></label><div className="heading"><div><div className="eyebrow">Fieldwork / {route==='overview'?'Project desk':route}</div><h1 tabIndex={-1}>{title}</h1><div className="sub">{descriptions[route]}</div></div><div className="actions"><button type="button" onClick={()=>{go('overview');setTimeout(()=>document.getElementById('getting-started-title')?.focus(),50)}}>Getting started</button><button onClick={()=>refresh()}>Refresh records</button></div></div>{error&&snap&&<div className="callout warn" role="alert" data-state="offline_stale">Offline or service unavailable. Last loaded records may be stale. {error}</div>}<div role="status" aria-live="polite" className="screen-status">{status}</div>{realPanel}{render()}</main></div></div></>;
+}
+createRoot(document.getElementById('root')!).render(<App/>);

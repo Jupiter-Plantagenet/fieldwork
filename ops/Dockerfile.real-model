@@ -1,0 +1,35 @@
+FROM python:3.12.11-slim-bookworm@sha256:519591d6871b7bc437060736b9f7456b8731f1499a57e22e6c285135ae657bf7
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1
+
+WORKDIR /app
+COPY ops/requirements-real-model.lock /tmp/requirements.lock
+RUN python -m pip install --no-cache-dir --require-hashes -r /tmp/requirements.lock \
+    && python -c "import numpy, PIL, safetensors, torch; assert numpy.__version__ == '2.5.4'; assert PIL.__version__ == '13.0.0'; assert safetensors.__version__ == '0.8.0'; assert torch.__version__ == '2.14.1+cpu'"
+
+COPY fieldwork/model_child_entry.py /app/fieldwork/model_child_entry.py
+COPY fieldwork/real_train_child.py /app/fieldwork/real_train_child.py
+COPY fieldwork/real_infer_child.py /app/fieldwork/real_infer_child.py
+COPY fieldwork/qualified_infer_child.py /app/fieldwork/qualified_infer_child.py
+COPY fieldwork/residual_recipe.py /app/fieldwork/residual_recipe.py
+COPY fieldwork/real_training.py /app/fieldwork/real_training.py
+COPY fieldwork/real_bundle_child.py /app/fieldwork/real_bundle_child.py
+COPY fieldwork/real_bundle.py /app/fieldwork/real_bundle.py
+COPY fieldwork/real_run_profile.py /app/fieldwork/real_run_profile.py
+COPY fieldwork/ml.py /app/fieldwork/ml.py
+COPY fieldwork/data.py /app/fieldwork/data.py
+COPY fieldwork/safe_codec.py /app/fieldwork/safe_codec.py
+COPY fieldwork/fsops.py /app/fieldwork/fsops.py
+COPY fieldwork/metrics.py /app/fieldwork/metrics.py
+COPY fieldwork/real_pixels.py /app/fieldwork/real_pixels.py
+COPY fieldwork/container_real_pixels.py /app/fieldwork/container_real_pixels.py
+COPY fieldwork/real_pixel_decoder.py /app/fieldwork/real_pixel_decoder.py
+COPY tools/verify_metrics.py /app/tools/verify_metrics.py
+COPY tools/verify_release_bundle.py /app/tools/verify_release_bundle.py
+COPY tools/verify_population_metrics.py /app/tools/verify_population_metrics.py
+
+USER 65532:65532
+ENTRYPOINT ["/usr/local/bin/python", "-I", "-B", "/app/fieldwork/model_child_entry.py"]

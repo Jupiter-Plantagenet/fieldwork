@@ -1,0 +1,47 @@
+{
+  "started_utc": "2026-11-07T04:09:28.312181+00:00",
+  "checks": [
+    {
+      "command": [
+        "PYTHON",
+        "-m",
+        "pip",
+        "check"
+      ],
+      "exit_code": 0,
+      "log": "docs/verification/01.log"
+    },
+    {
+      "command": [
+        "PYTHON",
+        "-m",
+        "pytest",
+        "-q",
+        "-p",
+        "no:cacheprovider",
+        "tests/test_metrics.py",
+        "tests/test_full_metrics.py",
+        "tests/test_manifest.py",
+        "tests/test_standalone_dependencies.py",
+        "tests/test_real_worker_liveness_refresh.py"
+      ],
+      "exit_code": 0,
+      "log": "docs/verification/02.log"
+    },
+    {
+      "command": [
+        "npm",
+        "--prefix",
+        "apps/web",
+        "run",
+        "build"
+      ],
+      "exit_code": 0,
+      "log": "docs/verification/03.log"
+    }
+  ],
+  "scope": "Focused checks in the current checkout",
+  "passed": true,
+  "finished_utc": "2026-11-07T04:09:30.847331+00:00",
+  "environment": "Fresh dependency installation on the original Windows host"
+}

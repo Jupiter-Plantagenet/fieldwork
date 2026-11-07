@@ -1,0 +1,10 @@
+{
+  "publication_candidate": true,
+  "author": "George Akor",
+  "prepared_date": "2026-11-07",
+  "original_source_commit": "bb3e74cc6fe15d39d87e422c066e034fcb7c2d30",
+  "origin": "Working-tree snapshot with explicitly recorded standalone publication repairs",
+  "included_history": "New local repository history starts with the reviewed source snapshot",
+  "historical_reports": "Retain original measurement dates and their limitations",
+  "ci_status": "Workflow prepared. Local checks executed on Windows. Hosted Linux CI awaits publication."
+}

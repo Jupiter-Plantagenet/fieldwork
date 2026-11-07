@@ -1,0 +1,10 @@
+{
+  "scope": "synthetic-execution-only",
+  "committed_epochs": [
+    1
+  ],
+  "updates": 4,
+  "validation_predictions": 10,
+  "initial_digest": "d660c37de17e3fe28b2a99cfdb5bad6fad9980ae02cae0978f43ba6eac6aab99",
+  "final_digest": "f1be2befb2e3b8fb35c01e8a106ee3cdcb4cd0df15ed48bc0fc3e0a108c8576b"
+}
