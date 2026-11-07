@@ -6,5 +6,6 @@
   "origin": "Working-tree snapshot with explicitly recorded standalone publication repairs",
   "included_history": "New local repository history starts with the reviewed source snapshot",
   "historical_reports": "Retain original measurement dates and their limitations",
-  "ci_status": "Workflow prepared. Local checks executed on Windows. Hosted Linux CI awaits publication."
+  "ci_status": "Public workflow results are available in the repository Actions tab.",
+  "ci_url": "https://github.com/Jupiter-Plantagenet/fieldwork/actions/workflows/verify.yml"
 }

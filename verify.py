@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parent
 COMMANDS = [['PYTHON', '-m', 'pip', 'check'], ['PYTHON', '-m', 'pytest', '-q', '-p', 'no:cacheprovider', 'tests/test_metrics.py', 'tests/test_full_metrics.py', 'tests/test_manifest.py', 'tests/test_standalone_dependencies.py', 'tests/test_real_worker_liveness_refresh.py'], ['npm', '--prefix', 'apps/web', 'run', 'build']]
 
 def main():
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     python = ROOT / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     env = dict(os.environ, PYTHONPATH=str(ROOT), PYTHONDONTWRITEBYTECODE='1')
     report = {'started_utc': datetime.now(timezone.utc).isoformat(), 'checks': [],
